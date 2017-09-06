@@ -1,1 +1,4 @@
 results/
+*.hosts.txt
+ec2/
+umd/

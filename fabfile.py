@@ -51,6 +51,10 @@ env.hosts = list(load_hosts())
 env.use_ssh_config = True
 env.forward_agent = True
 
+# For EC2
+env.user="ubuntu"
+env.key_filename="~/.ssh/bengfortaws.pem"
+
 
 ##########################################################################
 ## Helper Functions
@@ -132,12 +136,13 @@ def cleanup():
     """
     Cleans up the results file so the experiments can be run again
     """
-    path = os.path.join(workspace, "results.json")
-    run("rm -f {}".format(path))
+    for name in ("results.json", "metrics.json"):
+        path = os.path.join(workspace, name)
+        run("rm -f {}".format(path))
 
 
 @parallel
-def bench(clients=1,server=SERVER,cmd="rtreq",sync=False):
+def bench(clients=1,server=SERVER,cmd="rtreq",sync=False,addr=None):
     """
     Runs the server on the host specified by the server index, then runs
     clients in a round robin fashion on all other hosts.
@@ -152,7 +157,7 @@ def bench(clients=1,server=SERVER,cmd="rtreq",sync=False):
 
     # Get the server
     server = env.hosts[server]
-
+    
     if server == env.host:
         # Run the serve command
         cmd = "{} serve -u 45s".format(cmd)
@@ -161,11 +166,11 @@ def bench(clients=1,server=SERVER,cmd="rtreq",sync=False):
             run(cmd)
     else:
         command = []
-        server = "{}:4157".format(server)
+        addr = "{}:4157".format(addr or server)
         for idx in range(round_robin(clients, env.host)):
             seed = random.randint(1, 1000000)
             command.append(
-                "{} bench -c {} -s {} -a {}".format(cmd, clients, seed, server)
+                "{} bench -c {} -s {} -a {}".format(cmd, clients, seed, addr)
             )
 
         # Run the client commands
