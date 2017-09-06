@@ -176,10 +176,17 @@ def bench(clients=1,server=SERVER,cmd="rtreq",sync=False):
 
 
 @parallel
-def getmerge(path=RESULTS, name="results.json", suffix=None):
+def getmerge(path=RESULTS, suffix=None, server=SERVER):
     """
     Get the results.json and save it with the specified suffix to localpath.
     """
+    server = env.hosts[server]
+
+    if server == env.host:
+        name = "metrics.json"
+    else:
+        name = "results.json"
+
     remote = os.path.join(workspace, name)
     local = os.path.join(path, env.host, add_suffix(name, suffix))
     local  = unique_name(local)
